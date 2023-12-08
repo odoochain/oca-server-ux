@@ -59,3 +59,11 @@ class ResUsers(models.Model):
     @property
     def SELF_WRITEABLE_FIELDS(self):
         return super().SELF_WRITEABLE_FIELDS + ["technical_features"]
+
+    # def __init__(self, pool, cr):
+    #     super().__init__(pool, cr)
+    #     type(self).SELF_READABLE_FIELDS += [
+    #         "technical_features",
+    #         "show_technical_features",
+    #     ]
+    #     type(self).SELF_WRITEABLE_FIELDS.append("technical_features")
