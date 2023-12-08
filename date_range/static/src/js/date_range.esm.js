@@ -1,5 +1,4 @@
 /** @odoo-module **/
-import {FIELD_OPERATORS, FIELD_TYPES} from "web.searchUtils";
 import {CustomFilterItem} from "@web/search/filter_menu/custom_filter_item";
 import {_lt} from "@web/core/l10n/translation";
 import {patch} from "@web/core/utils/patch";
@@ -15,9 +14,6 @@ patch(CustomFilterItem.prototype, "date_range.CustomFilterItem", {
     },
 
     async _computeDateRangeOperators() {
-        this.OPERATORS = Object.assign({}, FIELD_OPERATORS);
-        this.OPERATORS.date = [...FIELD_OPERATORS.date];
-        this.OPERATORS.datetime = [...FIELD_OPERATORS.datetime];
         this.date_ranges = {};
         const result = await this.orm.searchRead(
             "date.range",
@@ -34,8 +30,21 @@ patch(CustomFilterItem.prototype, "date_range.CustomFilterItem", {
                     date_range: true,
                     date_range_type: range_type,
                 };
-                this.OPERATORS.date.push(r);
-                this.OPERATORS.datetime.push(r);
+                var dateExistingOption = this.OPERATORS.date.find(function (option) {
+                    return option.date_range_type === r.date_range_type;
+                });
+                if (!dateExistingOption) {
+                    this.OPERATORS.date.push(r);
+                }
+
+                var datetimeExistingOption = this.OPERATORS.datetime.find(function (
+                    option
+                ) {
+                    return option.date_range_type === r.date_range_type;
+                });
+                if (!datetimeExistingOption) {
+                    this.OPERATORS.datetime.push(r);
+                }
                 this.date_ranges[range_type] = [];
             }
             this.date_ranges[range_type].push(range);
@@ -44,7 +53,7 @@ patch(CustomFilterItem.prototype, "date_range.CustomFilterItem", {
 
     setDefaultValue(condition) {
         const type = this.fields[condition.field].type;
-        const operator = this.OPERATORS[FIELD_TYPES[type]][condition.operator];
+        const operator = this.OPERATORS[this.FIELD_TYPES[type]][condition.operator];
         if (operator.date_range) {
             const default_range = this.date_ranges[operator.date_range_type][0];
             const d_start = DateTime.fromSQL(`${default_range.date_start} 00:00:00`);
@@ -57,7 +66,7 @@ patch(CustomFilterItem.prototype, "date_range.CustomFilterItem", {
 
     onValueChange(condition, ev) {
         const type = this.fields[condition.field].type;
-        const operator = this.OPERATORS[FIELD_TYPES[type]][condition.operator];
+        const operator = this.OPERATORS[this.FIELD_TYPES[type]][condition.operator];
         if (operator.date_range) {
             const eid = parseInt(ev.target.value);
             const ranges = this.date_ranges[operator.date_range_type];
